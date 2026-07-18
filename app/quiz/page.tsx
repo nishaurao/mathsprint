@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 const topics = [
   {
@@ -55,9 +55,7 @@ const difficulties = [
   },
 ];
 
-// Choose which topics are available for each year
 function getTopicsForYear(year: number) {
-  // Year 1 gets addition and subtraction
   if (year === 1) {
     return topics.filter(
       (topic) =>
@@ -66,7 +64,6 @@ function getTopicsForYear(year: number) {
     );
   }
 
-  // Year 2 gets addition, subtraction and multiplication
   if (year === 2) {
     return topics.filter(
       (topic) =>
@@ -76,27 +73,66 @@ function getTopicsForYear(year: number) {
     );
   }
 
-  // Years 3, 4 and 5 get all topics
   return topics;
 }
 
+/*
+  Main page
+
+  useSearchParams needs to be inside a Suspense boundary
+  for the Next.js production build.
+*/
+
 export default function QuizPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-200 via-purple-100 to-pink-200">
+          <div className="text-center">
+            <div className="text-6xl">
+              🚀
+            </div>
+
+            <p className="mt-4 text-2xl font-black text-purple-900">
+              Loading MathSprint...
+            </p>
+          </div>
+        </main>
+      }
+    >
+      <QuizContent />
+    </Suspense>
+  );
+}
+
+/*
+  Quiz setup content
+*/
+
+function QuizContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const year = Number(searchParams.get("year"));
+  const year = Number(
+    searchParams.get("year")
+  );
 
-  const availableTopics = getTopicsForYear(year);
+  const availableTopics =
+    getTopicsForYear(year);
 
   const [selectedTopic, setSelectedTopic] =
     useState<string | null>(null);
 
-  const [selectedDifficulty, setSelectedDifficulty] =
-    useState<string | null>(null);
+  const [
+    selectedDifficulty,
+    setSelectedDifficulty,
+  ] = useState<string | null>(null);
 
-  // Start the quiz
   function startSprint() {
-    if (!selectedTopic || !selectedDifficulty) {
+    if (
+      !selectedTopic ||
+      !selectedDifficulty
+    ) {
       return;
     }
 
@@ -150,7 +186,6 @@ export default function QuizPage() {
         <div className="mt-12 grid gap-6 sm:grid-cols-2">
 
           {availableTopics.map((topic) => {
-
             const selected =
               selectedTopic === topic.id;
 
@@ -158,10 +193,13 @@ export default function QuizPage() {
               <button
                 key={topic.id}
                 onClick={() => {
-                  setSelectedTopic(topic.id);
+                  setSelectedTopic(
+                    topic.id
+                  );
 
-                  // Reset difficulty if topic changes
-                  setSelectedDifficulty(null);
+                  setSelectedDifficulty(
+                    null
+                  );
                 }}
                 className={`rounded-3xl bg-gradient-to-br ${topic.style}
                   p-1 transition duration-300
@@ -226,56 +264,67 @@ export default function QuizPage() {
 
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
 
-              {difficulties.map((difficulty) => {
+              {difficulties.map(
+                (difficulty) => {
 
-                const selected =
-                  selectedDifficulty === difficulty.id;
+                  const selected =
+                    selectedDifficulty ===
+                    difficulty.id;
 
-                return (
-                  <button
-                    key={difficulty.id}
-                    onClick={() =>
-                      setSelectedDifficulty(
+                  return (
+                    <button
+                      key={
                         difficulty.id
-                      )
-                    }
-                    className={`rounded-3xl bg-white p-6 shadow-lg transition
-                      hover:-translate-y-1
-                      hover:shadow-xl
-                      ${
-                        selected
-                          ? "ring-4 ring-purple-600 ring-offset-4"
-                          : ""
-                      }`}
-                  >
+                      }
+                      onClick={() =>
+                        setSelectedDifficulty(
+                          difficulty.id
+                        )
+                      }
+                      className={`rounded-3xl bg-white p-6 shadow-lg transition
+                        hover:-translate-y-1
+                        hover:shadow-xl
+                        ${
+                          selected
+                            ? "ring-4 ring-purple-600 ring-offset-4"
+                            : ""
+                        }`}
+                    >
 
-                    <div className="text-5xl">
-                      {difficulty.icon}
-                    </div>
-
-                    <h3 className="mt-3 text-xl font-black text-slate-800">
-                      {difficulty.title}
-                    </h3>
-
-                    <p className="mt-1 text-sm font-medium text-slate-500">
-                      {difficulty.description}
-                    </p>
-
-                    {selected && (
-
-                      <div className="mt-4">
-
-                        <span className="rounded-full bg-purple-600 px-3 py-1 text-xs font-bold text-white">
-                          ✓ SELECTED
-                        </span>
-
+                      <div className="text-5xl">
+                        {
+                          difficulty.icon
+                        }
                       </div>
 
-                    )}
+                      <h3 className="mt-3 text-xl font-black text-slate-800">
+                        {
+                          difficulty.title
+                        }
+                      </h3>
 
-                  </button>
-                );
-              })}
+                      <p className="mt-1 text-sm font-medium text-slate-500">
+                        {
+                          difficulty.description
+                        }
+                      </p>
+
+                      {selected && (
+
+                        <div className="mt-4">
+
+                          <span className="rounded-full bg-purple-600 px-3 py-1 text-xs font-bold text-white">
+                            ✓ SELECTED
+                          </span>
+
+                        </div>
+
+                      )}
+
+                    </button>
+                  );
+                }
+              )}
 
             </div>
 
